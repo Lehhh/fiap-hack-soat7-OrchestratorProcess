@@ -1,0 +1,54 @@
+br.com.fiap.soat7:
+  redis-mid-url: ${REDIS_MID_URL}/redis-message/
+  KUBE_CONFIG: ~/.kube/config
+  MAX_EXECUTION_PER_POD: ${MAX_EXECUTION_PER_POD}
+  k8s:
+    namespace: ${NAMESPACE}
+    pods:
+      - name: ${UPLOAD_VIDEO}
+        image: ${UPLOAD_VIDEO_IMAGE}
+        envs:
+          - key: BUCKET_NAME
+            value: ${BUCKET_NAME}
+          - key: REGION
+            value: ${REGION}
+          - key: AWS_ACCESS_KEY_ID
+            value: ${AWS_ACCESS_KEY_ID}
+          - key: AWS_SECRET_ACCESS_KEY
+            value: ${AWS_SECRET_ACCESS_KEY}
+          - key: AWS_SESSION_TOKEN
+            value: ${AWS_SESSION_TOKEN}
+          - key: SHARED_DISK
+            value: ${SHARED_DISK}
+          - key: REDIS_MID_URL
+            value: ${REDIS_MID_URL}
+          - key: STEP
+            value: VIDEO
+      - name: ${UPLOAD_IMAGE}
+        image: ${UPLOAD_IMAGE_IMAGE}
+        envs:
+          - key: BUCKET_NAME
+            value: ${BUCKET_NAME}
+          - key: REGION
+            value: ${REGION}
+          - key: AWS_ACCESS_KEY_ID
+            value: ${AWS_ACCESS_KEY_ID}
+          - key: AWS_SECRET_ACCESS_KEY
+            value: ${AWS_SECRET_ACCESS_KEY}
+          - key: SHARED_DISK
+            value: ${SHARED_DISK}
+          - key: REDIS_MID_URL
+            value: ${REDIS_MID_URL}
+          - key: STEP
+            value: IMAGE
+      - name: ${PROCESS_VIDEO}
+        image: ${PROCESS_VIDEO_IMAGE}
+        envs:
+          - key: SHARED_DISK
+            value: ${SHARED_DISK}
+          - key: REDIS_MID_URL
+            value: ${REDIS_MID_URL}
+
+server:
+  port: 8080
+
