@@ -16,8 +16,6 @@ public class KubernetesController {
 
 	private final KubernetesService kubernetesService;
 	private final OrchestratorProcessProperties props;
-
-
 	@PostMapping("/create-pod")
 	public ResponseEntity<String>  createPod(@RequestParam String podName) {
 		try {

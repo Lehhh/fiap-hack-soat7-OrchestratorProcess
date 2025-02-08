@@ -31,32 +31,28 @@ public class WorkflowUseCase {
 
 	public void executeUploadVideoS3() throws Exception {
 		int videosToUpload = redisService.fetchQueueVideoS3().size();
-		int podsRequired = (int) Math.ceil((double) videosToUpload / maxExceutionPerPod);
-		int size = kubernetesService.listarPodsComPrefixo(uploadVideo).size();
+		extracted(videosToUpload, uploadVideo);
+	}
+	public void executeProcessVideo() throws Exception {
+		int videosToProcess = redisService.fetchQueueVideoProcess().size();
+		extracted(videosToProcess, processVideo);
+	}
+
+	public void executeUploadImageS3() throws Exception {
+		int imagesToUpload = redisService.fetchQueueImageS3().size();
+		extracted(imagesToUpload, uploadImage);
+	}
+
+	private void extracted(int videosToProcess, String process) throws Exception {
+		int podsRequired = (int) Math.ceil(videosToProcess / maxExceutionPerPod);
+		int size = kubernetesService.listarPodsComPrefixo(process).size();
 		for (int i = 0; i < podsRequired - size; i++) {
-			Pod pod = props.getK8s().getPods().stream().filter(p -> p.getName().equals(uploadVideo)).findFirst().get();
+			Pod pod = props.getK8s().getPods().stream().filter(p -> p.getName().equals(process)).findFirst().get();
 			kubernetesService.createEphemeralPod(pod);
 		}
 	}
 
-	public void executeProcessVideo() throws Exception {
-		int videosToProcess = redisService.fetchQueueVideoProcess().size();
-		int podsRequired = (int) Math.ceil((double) videosToProcess / maxExceutionPerPod);
-		int size = kubernetesService.listarPodsComPrefixo(processVideo).size();
-		for (int i = 0; i < podsRequired - size; i++) {
-			Pod pod = props.getK8s().getPods().stream().filter(p -> p.getName().equals(processVideo)).findFirst().get();
-			kubernetesService.createEphemeralPod(pod);
-		}
-	}
-	public void executeUploadImageS3() throws Exception {
-		int imagesToUpload = redisService.fetchQueueImageS3().size();
-		int podsRequired = (int) Math.ceil((double) imagesToUpload / maxExceutionPerPod);
-		int size = kubernetesService.listarPodsComPrefixo(uploadImage).size();
-		for (int i = 0; i < podsRequired - size; i++) {
-			Pod pod = props.getK8s().getPods().stream().filter(p -> p.getName().equals(imagesToUpload)).findFirst().get();
-			kubernetesService.createEphemeralPod(pod);
-		}
-	}
+
 
 
 
