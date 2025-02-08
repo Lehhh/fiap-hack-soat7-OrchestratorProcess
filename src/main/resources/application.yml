@@ -48,3 +48,7 @@ br.com.fiap.soat7:
             value: ${SHARED_DISK}
           - key: REDIS_MID_URL
             value: ${REDIS_MID_URL}
+
+server:
+  port: 8080
+
