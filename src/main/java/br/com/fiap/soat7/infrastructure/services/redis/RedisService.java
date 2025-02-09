@@ -22,7 +22,8 @@ public class RedisService {
 	private final OrchestratorProcessProperties props;
 
 	public List<String> fetchQueueVideoProcess(){
-		ResponseEntity<List<String>> exchange = restTemplate.exchange(props.getRedisMidUrl() + StatusRequest.PROCESS_VIDEO_QUEUE.getEndPoint(),
+		ResponseEntity<List<String>> exchange = restTemplate.exchange(
+				props.getRedisMidUrl() + StatusRequest.PROCESS_VIDEO_QUEUE.getEndPoint(),
 				HttpMethod.GET,
 				new HttpEntity<>(null),
 				new ParameterizedTypeReference<List<String>>() {}
