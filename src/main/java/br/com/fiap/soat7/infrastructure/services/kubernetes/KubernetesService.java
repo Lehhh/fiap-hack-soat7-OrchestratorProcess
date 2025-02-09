@@ -30,23 +30,50 @@ public class KubernetesService {
 		this.randomString = randomString;
 		this.props = props;
 	}
-	public void createEphemeralPod(Pod pod) throws Exception {
-		List<V1EnvVar> envs = pod.getEnvs().stream().map(e -> {
-			V1EnvVar v1EnvVar = new V1EnvVar();
-			v1EnvVar.setName(e.getKey());
-			v1EnvVar.setValue(e.getValue());
-			return v1EnvVar;
-		}).toList();
-		V1Pod podv1 = new V1Pod()
-				.metadata(new V1ObjectMeta().name(pod.getName()).namespace(props.getK8s().getNamespace()))
-				.spec(new V1PodSpec()
-						.addContainersItem(new V1Container()
-								.name(pod.getName()+ randomString.generateRandomString())
-								.image(pod.getImage())
-								.env(envs)
-								.command(List.of("sleep", "30"))));
 
-		api.createNamespacedPod("default", podv1, null, null, null, null);
+	public void createEphemeralPod(Pod pod) throws Exception {
+		try {
+			List<V1EnvVar> envs = pod.getEnvs().stream().map(e -> {
+				V1EnvVar v1EnvVar = new V1EnvVar();
+				v1EnvVar.setName(e.getKey());
+				v1EnvVar.setValue(e.getValue());
+				return v1EnvVar;
+			}).toList();
+			log.info("Criando pod na namespace {}", props.getK8s().getNamespace());
+			String podName = pod.getName() + randomString.generateRandomString().toLowerCase();
+			V1Pod podv1 = new V1Pod()
+					.apiVersion("v1")
+					.kind("Pod")
+					.metadata(new V1ObjectMeta().name(podName).namespace(props.getK8s().getNamespace()))
+					.spec(new V1PodSpec()
+							.addContainersItem(new V1Container()
+									.name(podName)
+									.image(pod.getImage())
+									.env(envs)
+									.volumeMounts(List.of(
+											new V1VolumeMount()
+													.name("app-storage")
+													.mountPath("/opt/app/shared")
+									)))
+							.volumes(List.of(
+									new V1Volume()
+											.name("app-storage")
+											.persistentVolumeClaim(
+													new V1PersistentVolumeClaimVolumeSource()
+															.claimName("app-pvc")
+											)
+							)));
+			api.createNamespacedPod( props.getK8s().getNamespace(), podv1, null, null, null, null);
+		}
+		catch (ApiException e) {
+			System.err.println("Erro ao criar Pod: " + e.getMessage());
+			System.err.println("Código de resposta: " + e.getCode());
+			System.err.println("Resposta da API: " + e.getResponseBody());
+			e.printStackTrace();
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	public List<String> listarPodsComPrefixo(String prefixo) throws ApiException {

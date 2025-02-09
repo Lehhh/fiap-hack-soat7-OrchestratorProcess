@@ -1,9 +1,10 @@
 FROM openjdk:17
 
 RUN mkdir /opt/code &&\
-    mkdir /opt/app \
+    mkdir /opt/app
+ADD ./ /opt/code
 
-ENV  M2_HOME '/opt/apache-maven-3.9.6'
+ENV M2_HOME '/opt/apache-maven-3.9.6'
 ENV PATH "$M2_HOME/bin:$PATH"
 
 RUN curl https://dlcdn.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz -o apache-maven-3.9.6-bin.tar.gz &&\
