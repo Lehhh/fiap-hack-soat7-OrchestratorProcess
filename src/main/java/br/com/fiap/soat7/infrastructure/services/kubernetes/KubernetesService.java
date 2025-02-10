@@ -32,6 +32,7 @@ public class KubernetesService {
 	}
 
 	public void createEphemeralPod(Pod pod) throws Exception {
+		String podName = pod.getName() + randomString.generateRandomString().toLowerCase();
 		try {
 			List<V1EnvVar> envs = pod.getEnvs().stream().map(e -> {
 				V1EnvVar v1EnvVar = new V1EnvVar();
@@ -40,7 +41,6 @@ public class KubernetesService {
 				return v1EnvVar;
 			}).toList();
 			log.info("Criando pod na namespace {}", props.getK8s().getNamespace());
-			String podName = pod.getName() + randomString.generateRandomString().toLowerCase();
 			V1Pod podv1 = new V1Pod()
 					.apiVersion("v1")
 					.kind("Pod")
@@ -67,13 +67,24 @@ public class KubernetesService {
 			api.createNamespacedPod( props.getK8s().getNamespace(), podv1, null, null, null, null);
 		}
 		catch (ApiException e) {
-			System.err.println("Erro ao criar Pod: " + e.getMessage());
-			System.err.println("Código de resposta: " + e.getCode());
-			System.err.println("Resposta da API: " + e.getResponseBody());
+			log.error("Erro ao criar Pod: " + e.getMessage());
+			log.error("Código de resposta: " + e.getCode());
+			log.error("Resposta da API: " + e.getResponseBody());
 			e.printStackTrace();
-		}
-		catch (Exception e){
+			throw e;
+		} catch (Exception e) {
 			e.printStackTrace();
+			throw e;
+		} finally {
+			try {
+				api.deleteNamespacedPod(podName, props.getK8s().getNamespace(), null, null, null, null, null, null);
+				log.info("Pod {} deletado devido a erro", podName);
+			} catch (ApiException e) {
+				log.error("Erro ao deletar Pod: " + e.getMessage());
+				log.error("Código de resposta: " + e.getCode());
+				log.error("Resposta da API: " + e.getResponseBody());
+				e.printStackTrace();
+			}
 		}
 	}
 
