@@ -44,11 +44,13 @@ public class WorkflowUseCase {
 	}
 
 	private void extracted(int videosToProcess, String process) throws Exception {
-		int podsRequired = (int) Math.ceil(videosToProcess / maxExceutionPerPod);
+
+		int podsRequired = (videosToProcess + maxExceutionPerPod - 1) / maxExceutionPerPod;
 		int size = kubernetesService.listarPodsComPrefixo(process).size();
 		for (int i = 0; i < podsRequired - size; i++) {
 			Pod pod = props.getK8s().getPods().stream().filter(p -> p.getName().equals(process)).findFirst().get();
 			kubernetesService.createEphemeralPod(pod);
+			System.out.println("Criando pod");
 		}
 	}
 
