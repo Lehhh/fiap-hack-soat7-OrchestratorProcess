@@ -56,6 +56,13 @@ jobs:
       - name: Push Docker image to ECR
         run: docker push ${{ vars.ECR_REPOSITORY_URL }}${{ vars.IMAGE_ORCH_PROSS }}:1.0.0
 
+      - name: Create IAM Role
+        id: create-iam-role
+        run: |
+          aws iam create-role --role-name my-app-role --assume-role-policy-document file://trust-policy.json
+          aws iam put-role-policy --role-name my-app-role --policy-name my-app-policy --policy-document file://permissions-policy.json
+
+
       - name: Create AWS Secrets in Kubernetes
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
