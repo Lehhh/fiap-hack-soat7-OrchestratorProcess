@@ -42,6 +42,13 @@ jobs:
       - name: Create Kubernetes namespace
         run: kubectl create namespace ${{ secrets.NAMESPACE }} || true
 
+      - name: Create IAM Role
+        id: create-iam-role
+        run: |
+          aws iam create-role --role-name my-app-role --assume-role-policy-document file://.kube/app/trust-policy.json
+          aws iam put-role-policy --role-name my-app-role --policy-name my-app-policy --policy-document file://.kube/app/permissions-policy.json
+
+
       - name: Replace image placeholder
         run: sed -i 's|IMAGE_CORE_PLACEHOLDER|${{ vars.ECR_REPOSITORY_URL }}${{ vars.IMAGE_ORCH_PROSS }}:1.0.0|g' .kube/app/app-deployment.yaml
 
@@ -55,13 +62,6 @@ jobs:
 
       - name: Push Docker image to ECR
         run: docker push ${{ vars.ECR_REPOSITORY_URL }}${{ vars.IMAGE_ORCH_PROSS }}:1.0.0
-
-      - name: Create IAM Role
-        id: create-iam-role
-        run: |
-          aws iam create-role --role-name my-app-role --assume-role-policy-document file://.kube/app/trust-policy.json
-          aws iam put-role-policy --role-name my-app-role --policy-name my-app-policy --policy-document file://.kube/app/permissions-policy.json
-
 
       - name: Create AWS Secrets in Kubernetes
         env:
