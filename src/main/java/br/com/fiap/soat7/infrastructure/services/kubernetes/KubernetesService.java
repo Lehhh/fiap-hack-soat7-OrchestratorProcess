@@ -83,7 +83,7 @@ public class KubernetesService {
 		return podList.getItems().stream()
 				.map(pod -> pod.getMetadata().getName())
 				.filter(nome -> nome.startsWith(prefixo))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 }
