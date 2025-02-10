@@ -6,11 +6,13 @@ import br.com.fiap.soat7.infrastructure.services.kubernetes.KubernetesService;
 import br.com.fiap.soat7.infrastructure.services.redis.RedisService;
 import io.kubernetes.client.openapi.ApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class WorkflowUseCase {
 
 	private final KubernetesService kubernetesService;
@@ -50,7 +52,7 @@ public class WorkflowUseCase {
 		for (int i = 0; i < podsRequired - size; i++) {
 			Pod pod = props.getK8s().getPods().stream().filter(p -> p.getName().equals(process)).findFirst().get();
 			kubernetesService.createEphemeralPod(pod);
-			System.out.println("Criando pod");
+			log.info("Criando pod");
 		}
 	}
 
