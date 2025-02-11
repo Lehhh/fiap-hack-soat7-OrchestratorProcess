@@ -45,16 +45,16 @@ public class WorkflowUseCase {
 		extracted(imagesToUpload, uploadImage);
 	}
 
-	private void extracted(int videosToProcess, String process) throws Exception {
+	private void extracted(int videosToProcess, String deploymentName) throws Exception {
 
 		int podsRequired = (videosToProcess + maxExceutionPerPod - 1) / maxExceutionPerPod;
-		int size = kubernetesService.listarPodsComPrefixo(process).size();
-		for (int i = 0; i < podsRequired - size; i++) {
-			Pod pod = props.getK8s().getPods().stream().filter(p -> p.getName().equals(process)).findFirst().get();
-			kubernetesService.createEphemeralPod(pod);
-			log.info("Criando pod");
-		}
-	}
+		int size = kubernetesService.listarQuantidadeReplicas(deploymentName);
+        if (size < podsRequired) {
+            kubernetesService.scaleDeployment(deploymentName, podsRequired);
+        } else {
+            log.info("Deployment {} já possui {} replicas", deploymentName, size);
+        }
+    }
 
 
 

@@ -6,6 +6,7 @@ import br.com.fiap.soat7.domain.helper.GenerateRandomString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.Config;
@@ -31,64 +32,30 @@ public class KubernetesService {
 		this.props = props;
 	}
 
-	public void createEphemeralPod(Pod pod) throws Exception {
-		String podName = pod.getName() + randomString.generateRandomString().toLowerCase();
+	public void scaleDeployment(String deploymentName, int replicas) throws Exception {
 		try {
-			List<V1EnvVar> envs = pod.getEnvs().stream().map(e -> {
-				V1EnvVar v1EnvVar = new V1EnvVar();
-				v1EnvVar.setName(e.getKey());
-				v1EnvVar.setValue(e.getValue());
-				return v1EnvVar;
-			}).toList();
-			log.info("Criando pod na namespace {}", props.getK8s().getNamespace());
-			V1Pod podv1 = new V1Pod()
-					.apiVersion("v1")
-					.kind("Pod")
-					.metadata(new V1ObjectMeta().name(podName).namespace(props.getK8s().getNamespace()))
-					.spec(new V1PodSpec()
-							.serviceAccount("my-app-sa")
-							.restartPolicy("Never")
-							.addContainersItem(new V1Container()
-									.name(podName)
-									.image(pod.getImage())
-									.env(envs)
-									.volumeMounts(List.of(
-											new V1VolumeMount()
-													.name("app-storage")
-													.mountPath("/opt/app/shared")
-									)))
-							.volumes(List.of(
-									new V1Volume()
-											.name("app-storage")
-											.persistentVolumeClaim(
-													new V1PersistentVolumeClaimVolumeSource()
-															.claimName("app-pvc")
-											)
-							)));
-			api.createNamespacedPod( props.getK8s().getNamespace(), podv1, null, null, null, null);
-		}
-		catch (ApiException e) {
-			log.error("Erro ao criar Pod: " + e.getMessage());
-			log.error("Código de resposta: " + e.getCode());
-			log.error("Resposta da API: " + e.getResponseBody());
+			AppsV1Api appsApi = new AppsV1Api();
+			V1Deployment deployment = appsApi.readNamespacedDeployment(deploymentName, props.getK8s().getNamespace(), null);
+			deployment.getSpec().setReplicas(replicas);
+			appsApi.replaceNamespacedDeployment(deploymentName, props.getK8s().getNamespace(), deployment, null, null, null, null);
+			log.info("Deployment {} scaled to {} replicas in namespace {}", deploymentName, replicas, props.getK8s().getNamespace());
+		} catch (ApiException e) {
+			log.error("Error scaling Deployment: " + e.getMessage());
+			log.error("Response code: " + e.getCode());
+			log.error("API response: " + e.getResponseBody());
 			e.printStackTrace();
 			throw e;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
-		} finally {
-			try {
-				api.deleteNamespacedPod(podName, props.getK8s().getNamespace(), null, null, null, null, null, null);
-				log.info("Pod {} deletado devido a erro", podName);
-			} catch (ApiException e) {
-				log.error("Erro ao deletar Pod: " + e.getMessage());
-				log.error("Código de resposta: " + e.getCode());
-				log.error("Resposta da API: " + e.getResponseBody());
-				e.printStackTrace();
-			}
 		}
 	}
-
+	public int listarQuantidadeReplicas(String deploymentName) throws ApiException {
+		log.info("Iniciando listagem da quantidade de replicas para o deployment: {}", deploymentName);
+		AppsV1Api appsApi = new AppsV1Api();
+		V1Deployment deployment = appsApi.readNamespacedDeployment(deploymentName, props.getK8s().getNamespace(), null);
+		return deployment.getSpec().getReplicas();
+	}
 	public List<String> listarPodsComPrefixo(String prefixo) throws ApiException {
 		log.info("Iniciando listagem dos pods com prefixo: {}", prefixo);
 		V1PodList podList = api.listNamespacedPod(props.getK8s().getNamespace(), null, null, null, null, null, null, null, null, null, false);
