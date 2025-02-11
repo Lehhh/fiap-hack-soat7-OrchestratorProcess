@@ -49,6 +49,7 @@ public class WorkflowUseCase {
 
 		int podsRequired = (videosToProcess + maxExceutionPerPod - 1) / maxExceutionPerPod;
 		int size = kubernetesService.listarQuantidadeReplicas(deploymentName);
+		size = size == 0 ? 1 : size;
         if (size < podsRequired) {
             kubernetesService.scaleDeployment(deploymentName, podsRequired);
         } else {
