@@ -46,6 +46,7 @@ public class KubernetesService {
 					.kind("Pod")
 					.metadata(new V1ObjectMeta().name(podName).namespace(props.getK8s().getNamespace()))
 					.spec(new V1PodSpec()
+							.serviceAccount("my-app-sa")
 							.restartPolicy("Never")
 							.addContainersItem(new V1Container()
 									.name(podName)
