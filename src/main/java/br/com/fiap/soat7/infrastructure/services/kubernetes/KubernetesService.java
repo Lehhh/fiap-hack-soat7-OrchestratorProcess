@@ -56,13 +56,5 @@ public class KubernetesService {
 		V1Deployment deployment = appsApi.readNamespacedDeployment(deploymentName, props.getK8s().getNamespace(), null);
 		return deployment.getSpec().getReplicas();
 	}
-	public List<String> listarPodsComPrefixo(String prefixo) throws ApiException {
-		log.info("Iniciando listagem dos pods com prefixo: {}", prefixo);
-		V1PodList podList = api.listNamespacedPod(props.getK8s().getNamespace(), null, null, null, null, null, null, null, null, null, false);
-		return podList.getItems().stream()
-				.map(pod -> pod.getMetadata().getName())
-				.filter(nome -> nome.startsWith(prefixo))
-				.toList();
-	}
 
 }
